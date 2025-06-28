@@ -8,8 +8,7 @@ All features are packed into a single file — `os.html` — with a size of just
 
 ## 🖼️ Screenshot
 
-![Kynay OS Screenshot](https://raw.githubusercontent.com/anakbydu/Kynay-projek/main/kynay.png)
-
+![Kynay OS Screenshot](https://raw.githubusercontent.com/anakbydu/Kynay-projek/main/Screenshot_2025-06-28-21-31-13-95.jpg)
 ## 🌟 Features
 - Boot animation and welcome screen
 - Taskbar and start menu
