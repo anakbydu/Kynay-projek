@@ -32,3 +32,9 @@ All features are packed into a single file — `os.html` — with a size of just
 ## ⭐ Support
 
 If you like this project, please give it a ⭐ and share with others.
+
+
+## 👤 About the Creator
+
+Hi, I'm Farhan Kertadiwangsa, a 13-year-old self-taught developer from Indonesia.  
+Kynay OS is my personal passion project, built entirely from an Android phone (OPPO A12) without any frameworks.
