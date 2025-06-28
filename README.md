@@ -26,3 +26,8 @@ All features are packed into a single file — `os.html` — with a size of just
 *(If you activate GitHub Pages later, add the link here)*
 
 > Example: [https://anakbydu.github.io/kynay-projek](https://anakbydu.github.io/kynay-projek)
+📦 **Download**: [Kynay OS v1.0 Release](https://github.com/anakbydu/Kynay-projek/releases/tag/v1.0)
+
+🌐 **Try Live**: https://anakbydu.github.io/Kynay-projek *(if Pages is active)*
+
+📱 Built with OPPO A12 + Web Code, 100% offline from Android.
