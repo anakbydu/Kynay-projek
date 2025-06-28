@@ -5,7 +5,6 @@ It simulates a Windows-style desktop environment using only **HTML, CSS, and Jav
 All features are packed into a single file — `os.html` — with a size of just **34KB**.
 
 🛠️ Built entirely on my Android phone (OPPO A12), without any frameworks or external libraries.
-
 ## 🖼️ Screenshot
 
 ![Kynay OS Screenshot](https://raw.githubusercontent.com/anakbydu/Kynay-projek/main/Screenshot_2025-06-28-21-31-13-95.jpg)
