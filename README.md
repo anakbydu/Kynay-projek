@@ -6,6 +6,10 @@ All features are packed into a single file — `os.html` — with a size of just
 
 🛠️ Built entirely on my Android phone (OPPO A12), without any frameworks or external libraries.
 
+## 🖼️ Screenshot
+
+![Kynay OS Screenshot](https://raw.githubusercontent.com/anakbydu/Kynay-projek/main/kynay.png)
+
 ## 🌟 Features
 - Boot animation and welcome screen
 - Taskbar and start menu
@@ -14,20 +18,19 @@ All features are packed into a single file — `os.html` — with a size of just
 - Smooth transitions and responsive UI
 - 100% written in vanilla HTML, CSS, and JS
 
----
-
 ## 📱 Made with 💻 + 📱:
 - Device: **OPPO A12** (low-end phone)
 - Apps used: **Web Code**, **Pyroid 3**
 
----
+## 🚀 Live Preview *(optional)*
+> If you activate GitHub Pages and rename `os.html` to `index.html`, your live site will appear here:
 
-## 🚀 Live Preview (optional)
-*(If you activate GitHub Pages later, add the link here)*
+🔗 `https://anakbydu.github.io/Kynay-projek` *(not active yet)*
 
-> Example: [https://anakbydu.github.io/kynay-projek](https://anakbydu.github.io/kynay-projek)
-📦 **Download**: [Kynay OS v1.0 Release](https://github.com/anakbydu/Kynay-projek/releases/tag/v1.0)
+## 📦 Download
 
-🌐 **Try Live**: https://anakbydu.github.io/Kynay-projek *(if Pages is active)*
+🔖 [Kynay OS v1.0 Release](https://github.com/anakbydu/Kynay-projek/releases/tag/v1.0)
 
-📱 Built with OPPO A12 + Web Code, 100% offline from Android.
+## ⭐ Support
+
+If you like this project, please give it a ⭐ and share with others.
