@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kynay OS by Farhan Kertadiwangsa</title>
+    <style>
+        /* CSS Reset & Global Style */
+        :root {
+            --taskbar-height: 48px;
+            --start-menu-width: 380px;
+            --start-menu-height: 520px;
+            --background-primary: rgba(30, 30, 30, 0.75);
+            --background-secondary: rgba(45, 45, 45, 0.85);
+            --accent-color: #0078d4;
+            --font-color: #ffffff;
+            --border-radius: 8px;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            --animation-speed: 0.3s;
+
+            /* Dark Mode Variables */
+            --dark-background-primary: rgba(30, 30, 30, 0.75);
+            --dark-background-secondary: rgba(45, 45, 45, 0.85);
+            --dark-font-color: #ffffff;
+            --dark-window-bg: rgba(30, 30, 30, 0.75);
+
+            /* Light Mode Variables (hidden by default) */
+            --light-background-primary: rgba(240, 240, 240, 0.75);
+            --light-background-secondary: rgba(255, 255, 255, 0.85);
+            --light-font-color: #333333;
+            --light-window-bg: rgba(240, 240, 240, 0.75);
+        }
+
+        /* --- Dark Mode Toggle Styles (Start) --- */
+        body.light-mode {
+            background-color: #f0f0f0 !important; /* Override desktop background */
+        }
+        body.light-mode #taskbar,
+        body.light-mode #start-menu,
+        body.light-mode .window {
+            background-color: var(--light-background-primary);
+            border-color: rgba(0, 0, 0, 0.1);
+            color: var(--light-font-color);
+        }
+        body.light-mode .window-header {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        body.light-mode .desktop-icon span,
+        body.light-mode #boot-screen h1,
+        body.light-mode #boot-screen p,
+        body.light-mode #start-menu h2,
+        body.light-mode .start-menu-item span,
+        body.light-mode .window-title,
+        body.light-mode .app-content.notepad textarea,
+        body.light-mode .app-content.terminal,
+        body.light-mode .app-content.about h3,
+        body.light-mode .app-content.about p,
+        body.light-mode .app-content.calculator .calc-display,
+        body.light-mode .app-content.music .music-info h4,
+        body.light-mode .app-content.music .music-info p,
+        body.light-mode #clock,
+        body.light-mode .app-content.word-editor [contenteditable],
+        body.light-mode .app-content.spreadsheet [contenteditable] {
+            color: var(--light-font-color);
+        }
+        body.light-mode .browser-nav input {
+            background-color: rgba(0,0,0,0.1);
+            border-color: rgba(0,0,0,0.2);
+            color: var(--light-font-color);
+        }
+        body.light-mode .calc-button,
+        body.light-mode .word-editor-toolbar button,
+        body.light-mode .spreadsheet-controls button {
+            background: rgba(0,0,0,0.05);
+            color: var(--light-font-color);
+        }
+        body.light-mode .calc-button:hover,
+        body.light-mode .word-editor-toolbar button:hover,
+        body.light-mode .spreadsheet-controls button:hover {
+            background: rgba(0,0,0,0.1);
+        }
+        body.light-mode .taskbar-app-icon:not(.active):hover,
+        body.light-mode .desktop-icon:hover,
+        body.light-mode .start-menu-item:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        body.light-mode .taskbar-app-icon.active {
+            background-color: rgba(0,0,0,0.1);
+        }
+        body.light-mode .file-explorer-grid .explorer-item {
+            background-color: rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        body.light-mode .file-explorer-grid .explorer-item:hover {
+            background-color: rgba(0,0,0,0.08);
+        }
+        body.light-mode .file-explorer-grid .explorer-item span {
+            color: var(--light-font-color);
+        }
+        body.light-mode .app-content.spreadsheet table {
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        body.light-mode .app-content.spreadsheet th,
+        body.light-mode .app-content.spreadsheet td {
+            border: 1px solid rgba(0,0,0,0.1);
+            color: var(--light-font-color);
+        }
+        body.light-mode .app-content.task-manager ul li {
+            background-color: rgba(0,0,0,0.05);
+            color: var(--light-font-color);
+        }
+        /* --- Dark Mode Toggle Styles (End) --- */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* Mostly for text, but helps prevent accidental selection of UI elements */
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--font-color);
+            background-color: #000; /* Fallback for desktop background */
+        }
+
+        /* Enhanced Boot Screen */
+        #boot-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #111;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1.5s ease-out, visibility 1.5s ease-out;
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* --- Kynay Logo in Boot Screen (Start) --- */
+        .boot-logo {
+            font-family: 'Segoe UI', sans-serif; /* Modern font */
+            font-size: 4em;
+            font-weight: bold;
+            color: var(--accent-color); /* Use accent color for consistency */
+            animation: pulseText 2s infinite ease-in-out;
+            text-shadow: 0 0 15px rgba(0, 120, 212, 0.5); /* Subtle glow */
+        }
+        
+        @keyframes pulseText {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        /* --- Kynay Logo in Boot Screen (End) --- */
+
+        #boot-screen h1 {
+            margin-top: 25px;
+            font-weight: 400;
+            font-size: 2em;
+            letter-spacing: 3px;
+        }
+        
+        #boot-screen p {
+            margin-top: 10px;
+            font-weight: 300;
+            color: #aaa;
+        }
+        
+        /* Loading dots animation for boot screen */
+        .loading-dots::after {
+            content: '';
+            animation: loadingDots 1.5s infinite steps(1);
+        }
+
+        @keyframes loadingDots {
+            0% { content: ''; }
+            33% { content: '.'; }
+            66% { content: '..'; }
+            100% { content: '...'; }
+        }
+
+        /* Desktop & Wallpaper Container */
+        #desktop {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            background-color: #000;
+        }
+        
+        #desktop-icons {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .desktop-icon {
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            cursor: pointer; padding: 10px; border-radius: var(--border-radius);
+            transition: background-color 0.2s ease, transform 0.2s ease; width: 90px; text-align: center;
+        }
+        
+        .desktop-icon:hover { background-color: rgba(255, 255, 255, 0.1); transform: translateY(-3px); }
+        .desktop-icon i { font-size: 36px; }
+        .desktop-icon span { font-size: 13px; text-shadow: 1px 1px 3px rgba(0,0,0,0.7); }
+        .desktop-icon:active { transform: scale(0.95); } /* Click feedback */
+
+
+        /* Taskbar */
+        #taskbar {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: var(--taskbar-height);
+            background-color: var(--background-primary);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 5000;
+            display: flex; align-items: center; padding: 0 10px;
+        }
+        
+        /* --- Kynay Logo in Start Button (Start) --- */
+        #start-button {
+            width: 48px; height: 100%; display: flex; justify-content: center; align-items: center;
+            font-size: 20px; /* Adjust font size for text */
+            font-weight: bold; /* Make it bold */
+            cursor: pointer; border-radius: var(--border-radius);
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            color: var(--font-color); /* Ensure text color is visible */
+        }
+        #start-button:hover { background-color: rgba(255, 255, 255, 0.2); transform: scale(1.1); }
+        #start-button:active { transform: scale(0.95); }
+        /* --- Kynay Logo in Start Button (End) --- */
+
+        #taskbar-apps { display: flex; height: 100%; align-items: center; gap: 5px; margin-left: 10px; }
+        .taskbar-app-icon { font-size: 22px; padding: 8px; border-radius: 4px; cursor: pointer;
+            transition: background-color 0.2s ease, border-bottom 0.2s ease, transform 0.2s ease; border-bottom: 3px solid transparent; }
+        .taskbar-app-icon.active { background-color: rgba(255,255,255,0.15); border-bottom: 3px solid var(--accent-color); }
+        .taskbar-app-icon:not(.active):hover { background-color: rgba(255,255,255,0.1); transform: translateY(-2px); }
+        .taskbar-app-icon:active { transform: scale(0.95); }
+
+        #system-tray { margin-left: auto; display: flex; align-items: center; height: 100%; padding: 0 10px; gap: 15px;} /* Added gap */
+        #clock { font-size: 14px; text-align: center; }
+
+        /* Upgraded Start Menu */
+        #start-menu {
+            position: fixed;
+            bottom: calc(var(--taskbar-height) + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: var(--start-menu-width);
+            height: var(--start-menu-height);
+            background-color: var(--background-secondary);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--border-radius);
+            box-shadow: var(--shadow); z-index: 4999;
+            visibility: hidden; opacity: 0;
+            transform-origin: bottom center;
+            transition: opacity var(--animation-speed) ease, transform var(--animation-speed) ease, visibility var(--animation-speed);
+            transform: translateY(30px) scale(0.95) translateX(-50%);
+            display: flex; flex-direction: column; padding: 20px;
+        }
+        
+        #start-menu.show {
+            visibility: visible; opacity: 1;
+            transform: translateY(0) scale(1.0) translateX(-50%);
+        }
+        
+        #start-menu h2 { font-weight: 500; margin-bottom: 20px; }
+        .start-menu-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; overflow-y: auto; padding-right: 10px; }
+        .start-menu-item { display: flex; align-items: center; gap: 12px; padding: 10px;
+            cursor: pointer; border-radius: var(--border-radius); transition: background-color 0.2s ease, transform 0.2s ease; }
+        .start-menu-item:hover { background-color: rgba(255, 255, 255, 0.1); transform: translateX(5px); }
+        .start-menu-item:active { transform: scale(0.98); }
+        .start-menu-item i { font-size: 24px; color: var(--accent-color); width: 30px; text-align: center; }
+        
+        /* Window Styling with Animations */
+        .window {
+            position: absolute; background-color: var(--background-primary);
+            backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: var(--border-radius);
+            box-shadow: var(--shadow); min-width: 300px; min-height: 200px;
+            display: flex; flex-direction: column; resize: both; overflow: hidden;
+            animation: openWindow var(--animation-speed) cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* Added min/max width/height for better resizing */
+            max-width: 100vw;
+            max-height: calc(100vh - var(--taskbar-height));
+        }
+
+        .window.closing {
+            animation: closeWindow var(--animation-speed) ease-in-out forwards;
+        }
+
+        @keyframes openWindow {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes closeWindow {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
+        }
+        
+        .window-header { height: 35px; background-color: rgba(0, 0, 0, 0.2); cursor: move;
+            display: flex; align-items: center; padding: 0 10px; flex-shrink: 0; }
+        .window-title { font-weight: bold; flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .window-controls { display: flex; gap: 5px; }
+        .window-control { width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; transition: transform 0.2s ease; }
+        .window-control:hover { transform: scale(1.1); }
+        .window-control:active { transform: scale(0.9); }
+        #minimize-btn { background-color: #f7b529; }
+        #maximize-btn { background-color: #55c22d; }
+        #close-btn { background-color: #e94b35; }
+        
+        .window-body { flex-grow: 1; padding: 10px; overflow: auto; }
+        
+        /* App Specific Styles */
+        .app-content.notepad textarea { width: 100%; height: 100%; border: none; background-color: transparent;
+            color: var(--font-color); font-family: 'Consolas', monospace; font-size: 14px; resize: none; outline: none;} /* Added outline: none */
+        
+        .app-content.browser { display: flex; flex-direction: column; height: 100%; }
+        .browser-nav { display: flex; gap: 5px; margin-bottom: 5px; flex-shrink: 0; }
+        .browser-nav input { flex-grow: 1; background-color: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);
+            color: white; padding: 5px 8px; border-radius: 4px; outline: none; } /* Added outline: none */
+        .browser-nav button { background-color: var(--accent-color); border: none; color: white;
+            padding: 5px 10px; border-radius: 4px; cursor: pointer; transition: background-color 0.2s ease, transform 0.2s ease; }
+        .browser-nav button:hover { background-color: #0056b3; transform: scale(1.05); }
+        .browser-nav button:active { transform: scale(0.95); }
+        .browser-content { flex-grow: 1; border: none; background-color: white; }
+        
+        .app-content.terminal { background-color: rgba(0,0,0,0.8); font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px; line-height: 1.5; height: 100%; padding: 10px; color: #7cfc00; overflow-y: auto;} /* Set default terminal text color */
+        .terminal-output { height: calc(100% - 30px); overflow-y: auto; }
+        .terminal-input-line { display: flex; }
+        .terminal-prompt { white-space: pre; color: #fff; } /* Prompt color */
+        .terminal-input { flex-grow: 1; background: transparent; border: none; color: #7cfc00; /* Input text color */
+            font-family: inherit; font-size: inherit; outline: none; caret-color: #7cfc00; } /* Caret color */
+        .terminal-input:focus { outline: none; }
+
+        .app-content.about { text-align: center; padding-top: 20px; }
+        .app-content.about h3 { color: var(--accent-color); margin-bottom: 10px; }
+        .app-content.about .creator { margin-top: 20px; font-size: 1.1em; }
+        .app-content.about .creator span { font-weight: bold; color: var(--accent-color); }
+        .app-content.about .features-list { text-align: left; margin: 15px auto; max-width: 80%; list-style-type: none; padding-left: 0; }
+        .app-content.about .features-list li { margin-bottom: 5px; }
+        .app-content.about .features-list i { margin-right: 8px; color: var(--accent-color); }
+        .app-content.about .github-link { margin-top: 20px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--accent-color); font-weight: bold; transition: color 0.2s ease; }
+        .app-content.about .github-link:hover { color: #fff; }
+
+        .app-content.calculator { display: flex; flex-direction: column; gap: 10px; }
+        .calc-display { background: rgba(0,0,0,0.3); border-radius: 4px; padding: 15px 10px;
+            text-align: right; font-size: 2em; font-weight: 300; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .calc-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; flex-grow: 1;}
+        .calc-button { background: rgba(255,255,255,0.1); border: none; color: white; font-size: 1.2em;
+            border-radius: 4px; cursor: pointer; transition: background-color 0.2s, transform 0.2s; }
+        .calc-button:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
+        .calc-button:active { transform: scale(0.95); }
+        .calc-button.operator { background: var(--accent-color); }
+        .calc-button.operator:hover { background: #0056b3; }
+        .calc-button.wide { grid-column: span 2; }
+        
+        .app-content.music { text-align: center; }
+        .music-artwork { width: 150px; height: 150px; margin: 10px auto; background: #555;
+            border-radius: 50%; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .music-artwork img { width: 100%; height: 100%; object-fit: cover; }
+        .music-info h4 { margin-bottom: 5px; }
+        .music-info p { color: #ccc; font-size: 0.9em; }
+        .music-controls { margin-top: 20px; display: flex; justify-content: center; gap: 15px;}
+        .music-controls button { background: none; border: 2px solid white; color: white;
+            border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; transition: all 0.2s; }
+        .music-controls button:hover { background: var(--accent-color); border-color: var(--accent-color); transform: scale(1.1); }
+        .music-controls button:active { transform: scale(0.95); }
+
+        .app-content.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .gallery-item img:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(0,120,212,0.5); }
+
+        /* --- Chatbot AI Specific Styles (Start) --- */
+        .app-content.chatbot { display: flex; flex-direction: column; height: 100%; padding: 0;}
+        .chatbot-messages { flex-grow: 1; overflow-y: auto; padding: 10px; background-color: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.1);}
+        .chatbot-message { margin-bottom: 10px; padding: 8px 12px; border-radius: 15px; max-width: 80%; }
+        .chatbot-message.user { background-color: var(--accent-color); align-self: flex-end; margin-left: auto; color: white; }
+        .chatbot-message.ai { background-color: rgba(255,255,255,0.1); align-self: flex-start; margin-right: auto; }
+        .chatbot-input-area { display: flex; padding: 10px; border-top: 1px solid rgba(255,255,255,0.1);}
+        .chatbot-input { flex-grow: 1; padding: 8px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); background-color: rgba(0,0,0,0.3); color: white; outline: none;}
+        .chatbot-send-btn { margin-left: 10px; background-color: var(--accent-color); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background-color 0.2s;}
+        .chatbot-send-btn:hover { background-color: #0056b3; }
+        .chatbot-send-btn i { color: white; }
+        /* --- Chatbot AI Specific Styles (End) --- */
+
+        /* --- System Tray Icons (Start) --- */
+        .system-tray-icon {
+            font-size: 18px;
+            padding: 5px;
+            cursor: pointer;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+        .system-tray-icon:hover {
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
+        .system-tray-icon:active { transform: scale(0.9); }
+        /* --- System Tray Icons (End) --- */
+
+        /* --- Word Editor (Kynay Write) Styles (Start) --- */
+        .app-content.word-editor { display: flex; flex-direction: column; height: 100%; padding: 0;}
+        .word-editor-toolbar {
+            display: flex; gap: 5px; padding: 8px; background-color: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.1); flex-wrap: wrap;
+        }
+        .word-editor-toolbar button {
+            background-color: rgba(255,255,255,0.1); border: none; color: white;
+            padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .word-editor-toolbar button:hover { background-color: rgba(255,255,255,0.2); transform: translateY(-1px); }
+        .word-editor-toolbar button:active { transform: scale(0.95); }
+        .word-editor-content {
+            flex-grow: 1; padding: 15px; background-color: rgba(0,0,0,0.05);
+            outline: none; overflow-y: auto; line-height: 1.6;
+            color: var(--font-color); /* Ensure text color changes with mode */
+            word-wrap: break-word; /* Ensure long words wrap */
+        }
+        /* --- Word Editor (Kynay Write) Styles (End) --- */
+
+        /* --- Spreadsheet (Kynay Sheet) Styles (Start) --- */
+        .app-content.spreadsheet { display: flex; flex-direction: column; height: 100%; padding: 0;}
+        .spreadsheet-controls {
+            display: flex; gap: 10px; padding: 8px; background-color: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;
+        }
+        .spreadsheet-controls button {
+            background-color: rgba(255,255,255,0.1); border: none; color: white;
+            padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .spreadsheet-controls button:hover { background-color: rgba(255,255,255,0.2); transform: translateY(-1px); }
+        .spreadsheet-controls button:active { transform: scale(0.95); }
+
+        .spreadsheet-container { flex-grow: 1; overflow: auto; background-color: rgba(0,0,0,0.05); }
+        .spreadsheet-table {
+            border-collapse: collapse; width: 100%; min-width: max-content; /* Allow table to grow */
+            background-color: transparent;
+        }
+        .spreadsheet-table th, .spreadsheet-table td {
+            border: 1px solid rgba(255,255,255,0.1); padding: 8px; min-width: 80px;
+            text-align: left; vertical-align: top;
+            outline: none; /* Remove blue outline on focus */
+            user-select: text; /* Allow text selection within cells */
+            color: var(--font-color); /* Ensure text color changes with mode */
+        }
+        .spreadsheet-table th { background-color: rgba(255,255,255,0.1); font-weight: normal; }
+        .spreadsheet-table td[contenteditable=true]:focus {
+            box-shadow: inset 0 0 0 2px var(--accent-color); /* Custom focus indicator */
+        }
+        /* --- Spreadsheet (Kynay Sheet) Styles (End) --- */
+
+        /* --- File Explorer (FileSaya) Styles (Start) --- */
+        .app-content.file-explorer { display: flex; flex-direction: column; height: 100%; padding: 0; }
+        .explorer-path {
+            padding: 10px; background-color: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.9em; display: flex; align-items: center; gap: 5px;
+        }
+        .explorer-path span { color: #aaa; }
+        .explorer-path button {
+            background: none; border: none; color: var(--accent-color);
+            cursor: pointer; font-size: 1em; transition: color 0.2s;
+        }
+        .explorer-path button:hover { text-decoration: underline; color: #fff; }
+
+        .file-explorer-grid {
+            flex-grow: 1; overflow-y: auto; padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+            align-content: start; /* Align items to the top */
+        }
+        .explorer-item {
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            padding: 10px; border-radius: var(--border-radius);
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            cursor: pointer; text-align: center;
+            background-color: rgba(255,255,255,0.05); /* subtle background */
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .explorer-item:hover { background-color: rgba(255,255,255,0.15); transform: translateY(-3px); }
+        .explorer-item:active { transform: scale(0.95); }
+        .explorer-item i { font-size: 40px; color: #fff; } /* Default icon color */
+        .explorer-item.folder i { color: #f7b529; } /* Folder icon color */
+        .explorer-item.text i { color: #1abc9c; } /* Text file icon color */
+        .explorer-item.audio i { color: #e94b35; } /* Audio file icon color */
+        .explorer-item.image i { color: #9b59b6; } /* Image file icon color */
+        .explorer-item.html i { color: #3b88c3; } /* HTML file icon color */
+
+        .explorer-item span {
+            font-size: 0.85em;
+            word-break: break-all; /* Break long file names */
+            color: var(--font-color);
+        }
+        /* --- File Explorer (FileSaya) Styles (End) --- */
+
+        /* --- Task Manager (Manajer Tugas) Styles (Start) --- */
+        .app-content.task-manager { padding: 15px; display: flex; flex-direction: column; height: 100%; }
+        .task-manager h3 { margin-bottom: 15px; color: var(--accent-color); }
+        .task-list { list-style: none; padding: 0; flex-grow: 1; overflow-y: auto; }
+        .task-list li {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 15px; margin-bottom: 8px;
+            background-color: rgba(255,255,255,0.05); border-radius: 6px;
+            transition: background-color 0.2s ease;
+        }
+        .task-list li:hover { background-color: rgba(255,255,255,0.1); }
+        .task-list li span { font-weight: 500; }
+        .task-list li button {
+            background-color: #e94b35; color: white; border: none;
+            padding: 6px 12px; border-radius: 4px; cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .task-list li button:hover { background-color: #c0392b; transform: scale(1.05); }
+        .task-list li button:active { transform: scale(0.95); }
+        /* --- Task Manager (Manajer Tugas) Styles (End) --- */
+
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+
+    <div id="boot-screen">
+        <div class="boot-logo">Kynay</div> <h1>Kynay OS</h1>
+        <p>Memuat<span class="loading-dots"></span></p>
+    </div>
+
+    <div id="desktop">
+        <div id="desktop-icons">
+            <div class="desktop-icon" data-app="file-explorer"><i class="fa-solid fa-folder" style="color: #f7b529;"></i><span>FileSaya</span></div>
+            <div class="desktop-icon" data-app="notepad"><i class="fa-solid fa-file-alt" style="color: #ffffff;"></i><span>Notepad</span></div>
+            <div class="desktop-icon" data-app="word-editor"><i class="fa-solid fa-file-word" style="color: #2a569a;"></i><span>Kynay Write</span></div>
+            <div class="desktop-icon" data-app="spreadsheet"><i class="fa-solid fa-file-excel" style="color: #217346;"></i><span>Kynay Sheet</span></div>
+            <div class="desktop-icon" data-app="browser"><i class="fa-solid fa-globe" style="color: #3b88c3;"></i><span>Browser</span></div>
+            <div class="desktop-icon" data-app="terminal"><i class="fa-solid fa-terminal" style="color: #7cfc00;"></i><span>Terminal</span></div>
+            <div class="desktop-icon" data-app="calculator"><i class="fa-solid fa-calculator" style="color: #f7b529;"></i><span>Kalkulator</span></div>
+            <div class="desktop-icon" data-app="music"><i class="fa-solid fa-music" style="color: #e94b35;"></i><span>Musik</span></div>
+            <div class="desktop-icon" data-app="gallery"><i class="fa-solid fa-images" style="color: #9b59b6;"></i><span>Galeri</span></div>
+            <div class="desktop-icon" data-app="chatbot"><i class="fa-solid fa-comments" style="color: #a0d468;"></i><span>Chatbot AI</span></div>
+            <div class="desktop-icon" data-app="task-manager"><i class="fa-solid fa-list-check" style="color: #8e44ad;"></i><span>Manajer Tugas</span></div>
+            <div class="desktop-icon" data-app="about"><i class="fa-solid fa-circle-info" style="color: #1abc9c;"></i><span>Tentang</span></div>
+        </div>
+    </div>
+    
+    <div id="taskbar">
+        <div id="start-button">Kynay</div>
+        <div id="taskbar-apps"></div>
+        <div id="system-tray">
+            <i class="fas fa-expand system-tray-icon" id="fullscreen-btn" title="Fullscreen"></i>
+            <i class="fas fa-camera-retro system-tray-icon" id="save-layout-btn" title="Simpan Layout"></i>
+            <i class="fas fa-moon system-tray-icon" id="dark-mode-toggle" title="Toggle Dark/Light Mode"></i>
+            <i class="fas fa-power-off system-tray-icon" id="shutdown-btn" title="Shutdown"></i>
+            <div id="clock"></div>
+        </div>
+    </div>
+    
+    <div id="start-menu">
+        <h2>Aplikasi</h2>
+        <div class="start-menu-items">
+            <div class="start-menu-item" data-app="file-explorer"><i class="fa-solid fa-folder"></i><span>FileSaya</span></div>
+            <div class="start-menu-item" data-app="notepad"><i class="fa-solid fa-file-alt"></i><span>Notepad</span></div>
+            <div class="start-menu-item" data-app="word-editor"><i class="fa-solid fa-file-word"></i><span>Kynay Write</span></div>
+            <div class="start-menu-item" data-app="spreadsheet"><i class="fa-solid fa-file-excel"></i><span>Kynay Sheet</span></div>
+            <div class="start-menu-item" data-app="browser"><i class="fa-solid fa-globe"></i><span>Browser</span></div>
+            <div class="start-menu-item" data-app="terminal"><i class="fa-solid fa-terminal"></i><span>Terminal</span></div>
+            <div class="start-menu-item" data-app="calculator"><i class="fa-solid fa-calculator"></i><span>Kalkulator</span></div>
+            <div class="start-menu-item" data-app="music"><i class="fa-solid fa-music"></i><span>Musik</span></div>
+            <div class="start-menu-item" data-app="gallery"><i class="fa-solid fa-images"></i><span>Galeri</span></div>
+            <div class="start-menu-item" data-app="chatbot"><i class="fa-solid fa-comments"></i><span>Chatbot AI</span></div>
+            <div class="start-menu-item" data-app="task-manager"><i class="fa-solid fa-list-check"></i><span>Manajer Tugas</span></div>
+            <div class="start-menu-item" data-app="about"><i class="fa-solid fa-circle-info"></i><span>Tentang</span></div>
+        </div>
+    </div>
+
+    <template id="window-template">
+        <div class="window">
+            <div class="window-header">
+                <span class="window-title"></span>
+                <div class="window-controls">
+                    <div class="window-control" id="minimize-btn" title="Minimize"></div>
+                    <div class="window-control" id="maximize-btn" title="Maximize"></div>
+                    <div class="window-control" id="close-btn" title="Close"></div>
+                </div>
+            </div>
+            <div class="window-body"></div>
+        </div>
+    </template>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js"></script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const ANIMATION_DURATION = 300; // Corresponds to --animation-speed in CSS
+
+        // --- BOOT SEQUENCE ---
+        // Delays boot screen hide for a professional loading feel
+        window.onload = () => {
+            setTimeout(() => {
+                const bootScreen = document.getElementById('boot-screen');
+                bootScreen.style.opacity = '0';
+                setTimeout(() => bootScreen.style.visibility = 'hidden', 1500); // Wait for fade out
+            }, 2500); // Show boot screen for 2.5 seconds
+        };
+        
+        // --- ANIMATED WALLPAPER ---
+        // VANTA.js for dynamic background
+        VANTA.WAVES({ el: "#desktop", mouseControls: true, touchControls: true, gyroControls: false,
+            minHeight: 200.00, minWidth: 200.00, scale: 1.00, scaleMobile: 1.00,
+            color: 0x1a2c4a, shininess: 40.00, waveHeight: 15.00, waveSpeed: 0.70, zoom: 0.8 });
+
+        // --- CORE UI ELEMENTS ---
+        const desktop = document.getElementById('desktop');
+        const taskbar = document.getElementById('taskbar');
+        const startButton = document.getElementById('start-button');
+        const startMenu = document.getElementById('start-menu');
+        const clockElement = document.getElementById('clock');
+        const taskbarAppsContainer = document.getElementById('taskbar-apps');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const shutdownBtn = document.getElementById('shutdown-btn');
+        const saveLayoutBtn = document.getElementById('save-layout-btn'); // New save layout button
+
+        // --- CLOCK ---
+        // Updates the digital clock on the taskbar every second
+        function updateClock() {
+            const now = new Date();
+            const time = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            const date = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            clockElement.innerHTML = `${time}<br>${date}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- START MENU ---
+        // Toggles the visibility of the start menu
+        startButton.addEventListener('click', (e) => { e.stopPropagation(); startMenu.classList.toggle('show'); });
+        // Hides start menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!startMenu.contains(e.target) && !startButton.contains(e.target)) {
+                startMenu.classList.remove('show');
+            }
+        });
+
+        // --- WINDOW MANAGEMENT ---
+        let highestZIndex = 100; // Z-index for active windows
+        const openWindows = new Map(); // Stores active window elements and their states
+
+        // Brings a window to the foreground and activates its taskbar icon
+        function focusWindow(windowEl) {
+            highestZIndex++;
+            windowEl.style.zIndex = highestZIndex;
+            document.querySelectorAll('.taskbar-app-icon').forEach(icon => icon.classList.remove('active'));
+            const appID = windowEl.dataset.appId;
+            const taskbarIcon = taskbarAppsContainer.querySelector(`[data-app-id="${appID}"]`);
+            if (taskbarIcon) taskbarIcon.classList.add('active');
+        }
+
+        // Makes a window draggable by its header
+        function makeWindowDraggable(windowEl) {
+            const header = windowEl.querySelector('.window-header');
+            let isDragging = false, offsetX, offsetY;
+            header.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('window-control')) return; // Don't drag if clicking controls
+                isDragging = true;
+                offsetX = e.clientX - windowEl.offsetLeft;
+                offsetY = e.clientY - windowEl.offsetTop;
+                focusWindow(windowEl); // Focus window on drag start
+                e.preventDefault(); // Prevent text selection
+            });
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    let newX = e.clientX - offsetX;
+                    let newY = e.clientY - offsetY;
+                    const taskbarHeight = taskbar.offsetHeight;
+                    
+                    // Constrain window to viewport boundaries
+                    newX = Math.max(0, Math.min(newX, window.innerWidth - windowEl.offsetWidth));
+                    newY = Math.max(0, Math.min(newY, window.innerHeight - windowEl.offsetHeight - taskbarHeight));
+                    
+                    windowEl.style.left = `${newX}px`;
+                    windowEl.style.top = `${newY}px`;
+                }
+            });
+            document.addEventListener('mouseup', () => { isDragging = false; }); // Stop dragging on mouse up
+        }
+
+        // --- APP LAUNCHER ---
+        // Event listeners for launching apps from desktop icons and start menu
+        const appLaunchers = document.querySelectorAll('.desktop-icon, .start-menu-item');
+        appLaunchers.forEach(launcher => {
+            launcher.addEventListener('dblclick', () => { // Double click for desktop icons
+                const appId = launcher.dataset.app;
+                createWindow(appId);
+            });
+             launcher.addEventListener('click', (e) => { // Single click for start menu
+                if(e.currentTarget.classList.contains('start-menu-item')){
+                    const appId = launcher.dataset.app;
+                    createWindow(appId);
+                    startMenu.classList.remove('show'); // Close start menu after launching
+                }
+            });
+        });
+
+        // Creates a new window for a given application ID
+        function createWindow(appId, initialContent = '') {
+            if (openWindows.has(appId)) {
+                const existingWindow = openWindows.get(appId).element;
+                if(existingWindow.style.display === 'none') toggleMinimize(existingWindow, appId);
+                focusWindow(existingWindow);
+                return existingWindow; // Return existing window if already open
+            }
+
+            const template = document.getElementById('window-template');
+            const newWindow = template.content.cloneNode(true).firstElementChild;
+            newWindow.dataset.appId = appId;
+
+            const appConfig = getAppConfig(appId);
+            newWindow.querySelector('.window-title').textContent = appConfig.title;
+            const windowBody = newWindow.querySelector('.window-body');
+            windowBody.innerHTML = initialContent || appConfig.content; // Use initialContent if provided
+            windowBody.classList.add('app-content', appId);
+            
+            // Set initial window position and size randomly
+            newWindow.style.width = appConfig.width || '500px';
+            newWindow.style.height = appConfig.height || '400px';
+            newWindow.style.top = `${Math.random() * 50 + 50}px`;
+            newWindow.style.left = `${Math.random() * 150 + 100}px`;
+
+            desktop.appendChild(newWindow);
+            focusWindow(newWindow);
+            makeWindowDraggable(newWindow);
+            
+            // Attach window control event listeners
+            newWindow.querySelector('#close-btn').addEventListener('click', () => closeWindow(newWindow, appId));
+            newWindow.querySelector('#minimize-btn').addEventListener('click', () => toggleMinimize(newWindow, appId));
+            newWindow.querySelector('#maximize-btn').addEventListener('click', () => toggleMaximize(newWindow));
+
+            openWindows.set(appId, { element: newWindow, maximized: false });
+            createTaskbarIcon(appId, appConfig.icon, newWindow);
+            focusWindow(newWindow);
+
+            // Initialize app-specific logic
+            if (appId === 'notepad') initNotepad(newWindow);
+            if (appId === 'browser') initBrowser(newWindow);
+            if (appId === 'terminal') initTerminal(newWindow);
+            if (appId === 'calculator') initCalculator(newWindow);
+            if (appId === 'music') initMusicPlayer(newWindow);
+            if (appId === 'chatbot') initChatbot(newWindow);
+            if (appId === 'word-editor') initWordEditor(newWindow); // New Word Editor
+            if (appId === 'spreadsheet') initSpreadsheet(newWindow); // New Spreadsheet
+            if (appId === 'file-explorer') initFileExplorer(newWindow); // New File Explorer
+            if (appId === 'task-manager') initTaskManager(newWindow); // New Task Manager
+
+            newWindow.addEventListener('mousedown', () => focusWindow(newWindow)); // Focus on any click within window
+
+            return newWindow;
+        }
+        
+        // Configuration for all applications, including new ones
+        function getAppConfig(appId) {
+            const configs = {
+                notepad: { title: 'Notepad', icon: 'fa-file-alt', width: '450px', height: '500px', content: `<textarea placeholder="Tulis sesuatu di sini..."></textarea>` },
+                'word-editor': { title: 'Kynay Write', icon: 'fa-file-word', width: '650px', height: '550px', content: `
+                    <div class="word-editor-toolbar">
+                        <button data-command="bold"><i class="fas fa-bold"></i></button>
+                        <button data-command="italic"><i class="fas fa-italic"></i></button>
+                        <button data-command="underline"><i class="fas fa-underline"></i></button>
+                        <button data-command="justifyLeft"><i class="fas fa-align-left"></i></button>
+                        <button data-command="justifyCenter"><i class="fas fa-align-center"></i></button>
+                        <button data-command="justifyRight"><i class="fas fa-align-right"></i></button>
+                        <button data-command="justifyFull"><i class="fas fa-align-justify"></i></button>
+                        <button data-command="formatBlock" data-value="h1">H1</button>
+                        <button data-command="formatBlock" data-value="h2">H2</button>
+                        <button data-command="formatBlock" data-value="h3">H3</button>
+                        <button data-command="insertUnorderedList"><i class="fas fa-list-ul"></i></button>
+                        <button id="save-txt-btn"><i class="fas fa-save"></i> .txt</button>
+                        <button id="save-html-btn"><i class="fas fa-save"></i> .html</button>
+                    </div>
+                    <div class="word-editor-content" contenteditable="true" spellcheck="false">
+                        <p>Mulai menulis di sini...</p>
+                    </div>`
+                },
+                spreadsheet: { title: 'Kynay Sheet', icon: 'fa-file-excel', width: '700px', height: '500px', content: `
+                    <div class="spreadsheet-controls">
+                        <button id="export-csv-btn"><i class="fas fa-file-csv"></i> Ekspor CSV</button>
+                    </div>
+                    <div class="spreadsheet-container">
+                        <table class="spreadsheet-table" id="spreadsheet-table"></table>
+                    </div>`
+                },
+                'file-explorer': { title: 'FileSaya', icon: 'fa-folder', width: '600px', height: '500px', content: `
+                    <div class="explorer-path" id="explorer-path">
+                        <i class="fas fa-hdd"></i> <span>Disk Lokal (C:)</span> <span id="current-path"></span>
+                    </div>
+                    <div class="file-explorer-grid" id="file-explorer-grid"></div>`
+                },
+                'task-manager': { title: 'Manajer Tugas', icon: 'fa-list-check', width: '450px', height: '400px', content: `
+                    <h3>Aplikasi Berjalan</h3>
+                    <ul class="task-list" id="task-list"></ul>`
+                },
+                browser: { title: 'Web Browser', icon: 'fa-globe', width: '800px', height: '600px', content: `<div class="browser-nav"><input type="text" value="https://www.google.com/webhp?igu=1" placeholder="Masukkan URL"><button>Go</button></div><iframe class="browser-content" sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts" src="https://www.google.com/webhp?igu=1&igu=1"></iframe>` },
+                terminal: { title: 'Terminal', icon: 'fa-terminal', width: '600px', height: '400px', content: `<div class="terminal-output"><div>Selamat datang di Kynay OS Terminal!</div><div>Ketik 'help' untuk daftar perintah.</div><br></div><div class="terminal-input-line"><span class="terminal-prompt">KynayOS> </span><input type="text" class="terminal-input" autofocus></div>` },
+                about: { title: 'Tentang Kynay OS', icon: 'fa-circle-info', width: '450px', height: '450px', content: `
+                    <div class="about">
+                        <i class="fa-solid fa-bolt" style="font-size: 64px; margin-bottom: 20px; color: var(--accent-color);"></i>
+                        <h3>Kynay OS</h3>
+                        <p>Versi 2.0 "Quantum Pulse"</p>
+                        <p>Sebuah simulasi OS berbasis web canggih.</p>
+                        <p class="creator">Dibuat oleh: <span>Farhan Kertadiwangsa</span></p>
+                        <h4>Fitur Unggulan:</h4>
+                        <ul class="features-list">
+                            <li><i class="fas fa-check-circle"></i> Antarmuka Glassmorphism Modern</li>
+                            <li><i class="fas fa-check-circle"></i> Aplikasi Produktivitas (Word Editor, Spreadsheet)</li>
+                            <li><i class="fas fa-check-circle"></i> Simulasi File Explorer & Task Manager</li>
+                            <li><i class="fas fa-check-circle"></i> Chatbot AI Lokal (membutuhkan Flask)</li>
+                            <li><i class="fas fa-check-circle"></i> Animasi Halus & Responsif</li>
+                        </ul>
+                        <p style="margin-top: 15px;">Misi: Menjelajahi batas Web sebagai platform OS.</p>
+                        <p style="font-size: 0.9em; color: #aaa;">Spesifikasi Teknis: HTML5, CSS3, Vanilla JavaScript (tanpa framework).</p>
+                        <a href="https://github.com/your-github/kynay-os" target="_blank" class="github-link">
+                            <i class="fab fa-github"></i> Kunjungi GitHub
+                        </a>
+                        <p style="margin-top: 15px;">&copy; 2025</p>
+                    </div>`
+                },
+                calculator: { title: 'Kalkulator', icon: 'fa-calculator', width: '320px', height: '450px', content: `<div class="calc-display">0</div><div class="calc-buttons"><button class="calc-button operator">C</button><button class="calc-button operator">()</button><button class="calc-button operator">%</button><button class="calc-button operator">/</button><button class="calc-button">7</button><button class="calc-button">8</button><button class="calc-button">9</button><button class="calc-button operator">*</button><button class="calc-button">4</button><button class="calc-button">5</button><button class="calc-button">6</button><button class="calc-button operator">-</button><button class="calc-button">1</button><button class="calc-button">2</button><button class="calc-button">3</button><button class="calc-button operator">+</button><button class="calc-button wide">0</button><button class="calc-button">.</button><button class="calc-button operator">=</button></div>` },
+                music: { title: 'Pemutar Musik', icon: 'fa-music', width: '300px', height: '350px', content: `<div class="music-artwork"><img src="https://picsum.photos/200/200?random=1" alt="artwork"></div><div class="music-info"><h4>Stargazing</h4><p>Anonymous Artist</p></div><div class="music-controls"><button id="play-pause-btn"><i class="fas fa-play"></i></button></div><audio id="audio-player" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" loop></audio>`},
+                gallery: { title: 'Galeri Gambar', icon: 'fa-images', width: '550px', height: '450px', content: `<div class="gallery-grid"><div class="gallery-item"><img src="https://picsum.photos/400/300?random=10"></div><div class="gallery-item"><img src="https://picsum.photos/400/300?random=11"></div><div class="gallery-item"><img src="https://picsum.photos/400/300?random=12"></div><div class="gallery-item"><img src="https://picsum.photos/400/300?random=13"></div><div class="gallery-item"><img src="https://picsum.photos/400/300?random=14"></div><div class="gallery-item"><img src="https://picsum.photos/400/300?random=15"></div></div>`},
+                chatbot: { title: 'Chatbot AI', icon: 'fa-comments', width: '400px', height: '500px', content: `<div class="chatbot-messages"></div><div class="chatbot-input-area"><input type="text" class="chatbot-input" placeholder="Ketik pesan..."><button class="chatbot-send-btn"><i class="fas fa-paper-plane"></i></button></div>`},
+            };
+            return configs[appId];
+        }
+
+        // Closes a window with a fade-out animation
+        function closeWindow(windowEl, appId) {
+            windowEl.classList.add('closing');
+            setTimeout(() => {
+                windowEl.remove();
+                openWindows.delete(appId);
+                removeTaskbarIcon(appId);
+                // Update Task Manager if it's open
+                if (openWindows.has('task-manager')) {
+                    const tmWindow = openWindows.get('task-manager').element;
+                    updateTaskManagerList(tmWindow);
+                }
+            }, ANIMATION_DURATION);
+        }
+        
+        // Toggles minimization state of a window
+        function toggleMinimize(windowEl, appId) {
+             const taskbarIcon = taskbarAppsContainer.querySelector(`[data-app-id="${appId}"]`);
+             const isMinimized = windowEl.style.display === 'none';
+             if (isMinimized) {
+                 windowEl.style.display = 'flex';
+                 focusWindow(windowEl);
+             } else {
+                 windowEl.style.display = 'none';
+                 taskbarIcon.classList.remove('active');
+             }
+        }
+
+        // Stores last window position for maximize/restore functionality
+        let lastPosition = {};
+        // Toggles maximization state of a window
+        function toggleMaximize(windowEl) {
+            const appId = windowEl.dataset.appId;
+            const state = openWindows.get(appId);
+            if (state.maximized) {
+                // Restore to last known position and size
+                Object.assign(windowEl.style, { top: lastPosition.top, left: lastPosition.left, width: lastPosition.width, height: lastPosition.height, transition: 'all 0.3s ease' });
+                setTimeout(() => windowEl.style.transition = '', 300); // Remove transition after animation
+                state.maximized = false;
+            } else {
+                // Save current position and size before maximizing
+                lastPosition = { top: windowEl.style.top, left: windowEl.style.left, width: windowEl.style.width, height: windowEl.style.height };
+                // Maximize to full viewport
+                Object.assign(windowEl.style, { transition: 'all 0.3s ease', top: '0', left: '0', width: '100vw', height: `calc(100vh - var(--taskbar-height))` });
+                setTimeout(() => windowEl.style.transition = '', 300); // Remove transition after animation
+                state.maximized = true;
+            }
+            openWindows.set(appId, state);
+        }
+
+        // Creates a taskbar icon for a newly opened window
+        function createTaskbarIcon(appId, iconClass, windowEl) {
+            const icon = document.createElement('i');
+            icon.className = `fas ${iconClass} taskbar-app-icon`;
+            icon.dataset.appId = appId;
+            icon.addEventListener('click', () => {
+                const isMinimized = windowEl.style.display === 'none';
+                const isActive = icon.classList.contains('active');
+                if (!isMinimized && isActive) toggleMinimize(windowEl, appId);
+                else {
+                     if(isMinimized) toggleMinimize(windowEl, appId);
+                     focusWindow(windowEl);
+                }
+            });
+            taskbarAppsContainer.appendChild(icon);
+            // Update Task Manager if it's open
+            if (openWindows.has('task-manager')) {
+                const tmWindow = openWindows.get('task-manager').element;
+                updateTaskManagerList(tmWindow);
+            }
+        }
+
+        // Removes a taskbar icon when its window is closed
+        function removeTaskbarIcon(appId) {
+            const icon = taskbarAppsContainer.querySelector(`[data-app-id="${appId}"]`);
+            if (icon) icon.remove();
+        }
+        
+        // --- APP-SPECIFIC LOGIC ---
+
+        // Notepad app logic
+        function initNotepad(windowEl) {
+            // Nothing specific needed here as it's just a textarea
+        }
+
+        // Browser app logic
+        function initBrowser(windowEl) {
+            const input = windowEl.querySelector('input');
+            const button = windowEl.querySelector('button');
+            const iframe = windowEl.querySelector('iframe');
+            function navigate() {
+                let url = input.value.trim();
+                if (!url.startsWith('http')) { url = 'https://' + url; } // Prepend https if missing
+                iframe.src = url;
+            }
+            button.addEventListener('click', navigate);
+            input.addEventListener('keydown', (e) => { if(e.key === 'Enter') navigate(); });
+        }
+
+        // Terminal app logic
+        function initTerminal(windowEl) {
+            const output = windowEl.querySelector('.terminal-output');
+            const input = windowEl.querySelector('.terminal-input');
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const command = input.value.trim();
+                    const line = document.createElement('div');
+                    line.innerHTML = `<span class="terminal-prompt">KynayOS> </span>${command}`;
+                    output.appendChild(line);
+                    handleTerminalCommand(command, output);
+                    input.value = '';
+                    output.scrollTop = output.scrollHeight; // Scroll to bottom
+                }
+            });
+            input.focus(); // Focus the terminal input when opened
+        }
+        // Handles various terminal commands
+        function handleTerminalCommand(command, outputEl) {
+             const args = command.split(' '); const cmd = args[0].toLowerCase(); let response = '';
+             switch(cmd) {
+                 case 'help': response = `Perintah yang tersedia:<br>- help: Menampilkan daftar perintah<br>- date: Menampilkan tanggal dan waktu saat ini<br>- about: Informasi tentang Kynay OS<br>- echo [teks]: Mengulang teks yang Anda masukkan<br>- calc [ekspresi]: Menghitung ekspresi matematika (contoh: calc 1+1)<br>- clear: Membersihkan layar terminal<br>- apps: Menampilkan daftar aplikasi yang terbuka`; break;
+                 case 'date': response = new Date().toLocaleString('id-ID'); break;
+                 case 'about': response = 'Kynay OS v2.0 "Quantum Pulse" - Dibuat oleh Farhan Kertadiwangsa'; break;
+                 case 'echo': response = args.slice(1).join(' '); break;
+                 case 'calc':
+                     try {
+                         const expression = args.slice(1).join('');
+                         // Basic sanitization for eval to prevent direct function calls, though still not perfectly safe for untrusted input.
+                         // For a real OS, a more robust parser/calculator library would be needed.
+                         const safeExpression = expression.replace(/[^-()\d/*+.]/g, ''); // Allow only numbers and basic operators
+                         response = `Hasil: ${eval(safeExpression)}`;
+                     } catch (e) {
+                         response = `Ekspresi tidak valid: ${e.message}`;
+                     }
+                     break;
+                 case 'clear': outputEl.innerHTML = ''; return;
+                 case 'apps':
+                     if (openWindows.size === 0) {
+                         response = "Tidak ada aplikasi yang sedang berjalan.";
+                     } else {
+                         response = "Aplikasi yang sedang berjalan:<br>";
+                         openWindows.forEach((windowInfo, appId) => {
+                             response += `- ${windowInfo.element.querySelector('.window-title').textContent} (${appId})<br>`;
+                         });
+                     }
+                     break;
+                 default: response = `Perintah tidak ditemukan: '${cmd}'. Ketik 'help' untuk daftar perintah.`;
+             }
+             const responseEl = document.createElement('div');
+             responseEl.innerHTML = response; outputEl.appendChild(responseEl);
+             outputEl.appendChild(document.createElement('br')); // Add a line break for spacing
+        }
+        
+        // Calculator app logic
+        function initCalculator(windowEl) {
+            const display = windowEl.querySelector('.calc-display');
+            const buttons = windowEl.querySelector('.calc-buttons');
+            let currentInput = '0';
+            let operator = null;
+            let prevInput = null;
+            let resetDisplay = false;
+
+            display.textContent = currentInput; // Initialize display
+
+            buttons.addEventListener('click', e => {
+                if(!e.target.matches('button')) return;
+                const key = e.target.textContent;
+
+                if(!isNaN(key) || key === '.') { // Number or decimal point
+                    if (resetDisplay) {
+                        currentInput = key === '.' ? '0.' : key;
+                        resetDisplay = false;
+                    } else {
+                        if(currentInput === '0' && key !== '.') currentInput = key;
+                        else if(key === '.' && currentInput.includes('.')) return;
+                        else currentInput += key;
+                    }
+                } else if (key === 'C') { // Clear
+                    currentInput = '0'; operator = null; prevInput = null; resetDisplay = false;
+                } else if (key === '=') { // Equals
+                    if(operator && prevInput !== null) {
+                        try {
+                            currentInput = String(eval(`${prevInput} ${operator} ${currentInput}`));
+                        } catch (e) {
+                            currentInput = 'Error';
+                        }
+                        operator = null; prevInput = null; resetDisplay = true;
+                    }
+                } else if (key === '()') { // Parentheses - simplified, just toggles display
+                    currentInput = currentInput === '0' ? '()' : currentInput + '()';
+                }
+                else { // Operators (+, -, *, /, %)
+                    if (prevInput !== null && operator && !resetDisplay) { // Chain operations
+                        try {
+                            currentInput = String(eval(`${prevInput} ${operator} ${currentInput}`));
+                        } catch (e) {
+                            currentInput = 'Error';
+                        }
+                        display.textContent = currentInput; // Update display immediately after calculation
+                    }
+                    operator = key;
+                    prevInput = currentInput;
+                    resetDisplay = true;
+                }
+                display.textContent = currentInput;
+            });
+        }
+        
+        // Music player logic
+        function initMusicPlayer(windowEl) {
+            const audio = windowEl.querySelector('#audio-player');
+            const playBtn = windowEl.querySelector('#play-pause-btn');
+            const playIcon = playBtn.querySelector('i');
+
+            playBtn.addEventListener('click', () => {
+                if(audio.paused) {
+                    audio.play();
+                    playIcon.className = 'fas fa-pause';
+                } else {
+                    audio.pause();
+                    playIcon.className = 'fas fa-play';
+                }
+            });
+        }
+
+        // Chatbot AI Logic
+        function initChatbot(windowEl) {
+            const messagesContainer = windowEl.querySelector('.chatbot-messages');
+            const inputField = windowEl.querySelector('.chatbot-input');
+            const sendButton = windowEl.querySelector('.chatbot-send-btn');
+
+            function addMessage(text, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('chatbot-message', sender);
+                messageDiv.textContent = text;
+                messagesContainer.appendChild(messageDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight; // Auto-scroll
+            }
+
+            async function sendMessage() {
+                const userMessage = inputField.value.trim();
+                if (userMessage === '') return;
+
+                addMessage(userMessage, 'user');
+                inputField.value = '';
+
+                try {
+                    // This will only work if you have a local Flask server running at 127.0.0.1:5000
+                    const response = await fetch('http://127.0.0.1:5000/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ message: userMessage })
+                    });
+                    const data = await response.json();
+                    addMessage(data.response, 'ai');
+                } catch (error) {
+                    console.error('Error fetching from chatbot API:', error);
+                    addMessage('Maaf, saya tidak dapat terhubung ke AI saat ini.', 'ai');
+                }
+            }
+
+            sendButton.addEventListener('click', sendMessage);
+            inputField.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            addMessage('Halo! Ada yang bisa saya bantu?', 'ai'); // Initial message
+        }
+
+        // --- Word Editor (Kynay Write) Logic ---
+        function initWordEditor(windowEl) {
+            const contentDiv = windowEl.querySelector('.word-editor-content');
+            const toolbar = windowEl.querySelector('.word-editor-toolbar');
+            const saveTxtBtn = windowEl.querySelector('#save-txt-btn');
+            const saveHtmlBtn = windowEl.querySelector('#save-html-btn');
+
+            toolbar.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                if (!button) return;
+
+                const command = button.dataset.command;
+                const value = button.dataset.value;
+
+                if (command) {
+                    document.execCommand(command, false, value);
+                    contentDiv.focus(); // Keep focus on content after command
+                }
+            });
+
+            saveTxtBtn.addEventListener('click', () => {
+                const textContent = contentDiv.innerText; // Get plain text
+                downloadBlob(textContent, 'dokumen.txt', 'text/plain');
+            });
+
+            saveHtmlBtn.addEventListener('click', () => {
+                const htmlContent = contentDiv.innerHTML; // Get rich HTML content
+                const fullHtml = `<!DOCTYPE html>\n<html>\n<head>\n<title>Kynay Write Document</title>\n</head>\n<body>\n${htmlContent}\n</body>\n</html>`;
+                downloadBlob(fullHtml, 'dokumen.html', 'text/html');
+            });
+        }
+
+        // --- Spreadsheet (Kynay Sheet) Logic ---
+        function initSpreadsheet(windowEl) {
+            const table = windowEl.querySelector('#spreadsheet-table');
+            const exportCsvBtn = windowEl.querySelector('#export-csv-btn');
+            const ROWS = 10;
+            const COLS = 10;
+
+            function createSpreadsheet() {
+                table.innerHTML = ''; // Clear existing table
+                const thead = table.createTHead();
+                const headerRow = thead.insertRow();
+                headerRow.insertCell().textContent = ''; // Empty top-left cell
+
+                for (let j = 0; j < COLS; j++) {
+                    headerRow.insertCell().textContent = String.fromCharCode(65 + j); // A, B, C...
+                }
+
+                const tbody = table.createTBody();
+                for (let i = 0; i < ROWS; i++) {
+                    const row = tbody.insertRow();
+                    row.insertCell().textContent = i + 1; // 1, 2, 3...
+                    for (let j = 0; j < COLS; j++) {
+                        const cell = row.insertCell();
+                        cell.contentEditable = true;
+                        cell.dataset.row = i;
+                        cell.dataset.col = j;
+                        cell.addEventListener('input', updateCellValue);
+                        cell.addEventListener('blur', evaluateCell); // Evaluate on blur
+                    }
+                }
+            }
+
+            function getCellValue(row, col) {
+                const cell = table.rows[row + 1].cells[col + 1]; // +1 for header row/col
+                return cell ? cell.textContent : '';
+            }
+
+            function getCellReference(row, col) {
+                return String.fromCharCode(65 + col) + (row + 1);
+            }
+
+            function parseCellReference(ref) {
+                const col = ref.charCodeAt(0) - 65;
+                const row = parseInt(ref.substring(1)) - 1;
+                return { row, col };
+            }
+
+            function evaluateCell(event) {
+                const cell = event.target;
+                const originalValue = cell.textContent.trim();
+
+                if (originalValue.startsWith('=')) {
+                    let expression = originalValue.substring(1); // Remove '='
+                    
+                    // Replace cell references (e.g., A1, B2) with their values
+                    expression = expression.replace(/[A-Z]+\d+/g, (match) => {
+                        const { row, col } = parseCellReference(match);
+                        const referencedCell = table.rows[row + 1].cells[col + 1];
+                        return referencedCell ? referencedCell.dataset.calculatedValue || referencedCell.textContent : '0';
+                    });
+
+                    try {
+                        const result = eval(expression); // Basic evaluation
+                        cell.dataset.calculatedValue = result; // Store calculated value
+                        cell.textContent = result;
+                    } catch (e) {
+                        cell.textContent = '#ERROR!';
+                        cell.dataset.calculatedValue = '#ERROR!';
+                        console.error('Spreadsheet formula error:', e);
+                    }
+                } else {
+                    delete cell.dataset.calculatedValue; // Remove calculated value if not a formula
+                }
+                // Re-evaluate dependent cells (basic dependency, could be more robust)
+                recalculateAllCells();
+            }
+
+            function updateCellValue(event) {
+                // When a cell is directly edited, its calculated value (if any) is invalidated.
+                const cell = event.target;
+                delete cell.dataset.calculatedValue;
+            }
+
+            function recalculateAllCells() {
+                // Simple recalculation: iterate through all cells and re-evaluate if they start with '='
+                // This might not handle complex dependency graphs perfectly, but works for basic cases.
+                for (let i = 0; i < ROWS; i++) {
+                    for (let j = 0; j < COLS; j++) {
+                        const cell = table.rows[i + 1].cells[j + 1];
+                        if (cell.textContent.startsWith('=')) {
+                            // Trigger re-evaluation using dispatchEvent
+                            cell.dispatchEvent(new Event('blur'));
+                        }
+                    }
+                }
+            }
+
+
+            exportCsvBtn.addEventListener('click', () => {
+                let csvContent = "";
+                for (let i = 0; i < table.rows.length; i++) {
+                    let rowData = [];
+                    for (let j = 0; j < table.rows[i].cells.length; j++) {
+                        rowData.push(table.rows[i].cells[j].textContent.trim());
+                    }
+                    csvContent += rowData.join(',') + "\n";
+                }
+                downloadBlob(csvContent, 'spreadsheet.csv', 'text/csv');
+            });
+
+            createSpreadsheet();
+            windowEl.addEventListener('resize', createSpreadsheet); // Recreate on resize for layout changes
+        }
+
+        // --- File Explorer (FileSaya) Logic ---
+        function initFileExplorer(windowEl) {
+            const grid = windowEl.querySelector('#file-explorer-grid');
+            const pathDisplay = windowEl.querySelector('#current-path');
+
+            const fileSystem = {
+                'root': [
+                    { name: 'Dokumen', type: 'folder', content: [
+                        { name: 'Laporan_2025.txt', type: 'file', app: 'notepad', content: 'Ini adalah contoh dokumen teks.' },
+                        { name: 'Kynay_OS_Fitur.html', type: 'file', app: 'word-editor', content: '<h1>Fitur Kynay OS</h1><p>Ini adalah dokumen HTML yang disimpan dari Kynay Write.</p>' },
+                        { name: 'Data_Penjualan.csv', type: 'file', app: 'spreadsheet', content: 'Nama,Harga,Jumlah\nItem A,10000,5\nItem B,15000,3' },
+                        { name: 'Catatan_Penting.txt', type: 'file', app: 'notepad', content: 'Jangan lupa membeli susu!' }
+                    ]},
+                    { name: 'Musik', type: 'folder', content: [
+                        { name: 'My_Song.mp3', type: 'file', app: 'music', content: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
+                        { name: 'Chill_Beats.mp3', type: 'file', app: 'music', content: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' }
+                    ]},
+                    { name: 'Gambar', type: 'folder', content: [
+                        { name: 'Pemandangan.jpg', type: 'file', app: 'gallery', content: 'https://picsum.photos/800/600?random=1' },
+                        { name: 'Kota.png', type: 'file', app: 'gallery', content: 'https://picsum.photos/800/600?random=2' },
+                    ]},
+                    { name: 'Aplikasi', type: 'folder', content: [
+                        { name: 'Terminal.app', type: 'file', app: 'terminal' },
+                        { name: 'Kalkulator.app', type: 'file', app: 'calculator' }
+                    ]},
+                    { name: 'Readme.txt', type: 'file', app: 'notepad', content: 'Selamat datang di FileSaya! Klik dua kali untuk membuka item.' }
+                ]
+            };
+
+            let currentPath = []; // ['Dokumen', 'Subfolder']
+            let currentDirectory = fileSystem.root;
+
+            function renderDirectory(directory) {
+                grid.innerHTML = ''; // Clear current view
+                pathDisplay.textContent = '/' + currentPath.join('/');
+
+                if (currentPath.length > 0) {
+                    const backItem = document.createElement('div');
+                    backItem.classList.add('explorer-item');
+                    backItem.innerHTML = `<i class="fas fa-arrow-left" style="color: #ccc;"></i><span>Kembali</span>`;
+                    backItem.addEventListener('dblclick', () => {
+                        currentPath.pop();
+                        navigateToPath(currentPath);
+                    });
+                    grid.appendChild(backItem);
+                }
+
+                directory.forEach(item => {
+                    const itemEl = document.createElement('div');
+                    itemEl.classList.add('explorer-item');
+                    itemEl.dataset.name = item.name;
+
+                    let iconClass = '';
+                    let iconColor = '';
+                    if (item.type === 'folder') {
+                        iconClass = 'fa-folder';
+                        iconColor = '#f7b529';
+                        itemEl.classList.add('folder');
+                    } else {
+                        itemEl.classList.add('file');
+                        // Determine icon based on file extension or app type
+                        if (item.app === 'notepad' || item.name.endsWith('.txt')) { iconClass = 'fa-file-alt'; iconColor = '#1abc9c'; itemEl.classList.add('text'); }
+                        else if (item.app === 'word-editor' || item.name.endsWith('.html')) { iconClass = 'fa-file-word'; iconColor = '#2a569a'; itemEl.classList.add('html'); }
+                        else if (item.app === 'spreadsheet' || item.name.endsWith('.csv')) { iconClass = 'fa-file-excel'; iconColor = '#217346'; }
+                        else if (item.app === 'music' || item.name.endsWith('.mp3')) { iconClass = 'fa-file-audio'; iconColor = '#e94b35'; itemEl.classList.add('audio'); }
+                        else if (item.app === 'gallery' || item.name.endsWith('.jpg') || item.name.endsWith('.png')) { iconClass = 'fa-file-image'; iconColor = '#9b59b6'; itemEl.classList.add('image'); }
+                        else if (item.app === 'terminal') { iconClass = 'fa-terminal'; iconColor = '#7cfc00'; }
+                        else if (item.app === 'calculator') { iconClass = 'fa-calculator'; iconColor = '#f7b529'; }
+                        else if (item.app === 'chatbot') { iconClass = 'fa-comments'; iconColor = '#a0d468'; }
+                        else { iconClass = 'fa-file'; iconColor = '#fff'; } // Default file icon
+                    }
+                    
+                    itemEl.innerHTML = `<i class="fas ${iconClass}" style="color: ${iconColor};"></i><span>${item.name}</span>`;
+
+                    itemEl.addEventListener('dblclick', () => {
+                        if (item.type === 'folder') {
+                            currentPath.push(item.name);
+                            currentDirectory = item.content;
+                            renderDirectory(currentDirectory);
+                        } else if (item.type === 'file' && item.app) {
+                            // Simulate opening file in appropriate app
+                            // For content: Pass it to the app if applicable
+                            if (item.app === 'notepad' && item.content) {
+                                const notepadWindow = createWindow('notepad');
+                                notepadWindow.querySelector('textarea').value = item.content;
+                            } else if (item.app === 'word-editor' && item.content) {
+                                const wordEditorWindow = createWindow('word-editor');
+                                wordEditorWindow.querySelector('.word-editor-content').innerHTML = item.content;
+                            } else if (item.app === 'spreadsheet' && item.content) {
+                                const spreadsheetWindow = createWindow('spreadsheet', item.content);
+                                // For spreadsheet, you'd need to parse CSV content into the table
+                                initSpreadsheetWithContent(spreadsheetWindow, item.content);
+                            } else if (item.app === 'music' && item.content) {
+                                const musicWindow = createWindow('music');
+                                musicWindow.querySelector('#audio-player').src = item.content;
+                                musicWindow.querySelector('#play-pause-btn').click(); // Auto-play
+                                musicWindow.querySelector('.music-info h4').textContent = item.name.replace('.mp3', ''); // Update song title
+                                musicWindow.querySelector('.music-info p').textContent = 'FileSaya'; // Update artist
+                            } else if (item.app === 'gallery' && item.content) {
+                                const galleryWindow = createWindow('gallery');
+                                galleryWindow.querySelector('.gallery-grid').innerHTML = `<div class="gallery-item"><img src="${item.content}"></div>`;
+                            } else {
+                                createWindow(item.app); // Open app without specific content for others
+                            }
+                        }
+                    });
+                    grid.appendChild(itemEl);
+                });
+            }
+
+            function navigateToPath(pathArr) {
+                let tempDir = fileSystem.root;
+                for (let i = 0; i < pathArr.length; i++) {
+                    const folder = tempDir.find(item => item.name === pathArr[i] && item.type === 'folder');
+                    if (folder) {
+                        tempDir = folder.content;
+                    } else {
+                        currentPath = []; // Reset path if invalid
+                        tempDir = fileSystem.root;
+                        break;
+                    }
+                }
+                currentDirectory = tempDir;
+                renderDirectory(currentDirectory);
+            }
+
+            // A helper function to init spreadsheet with content (from File Explorer)
+            function initSpreadsheetWithContent(windowEl, csvContent) {
+                const table = windowEl.querySelector('#spreadsheet-table');
+                const rows = csvContent.trim().split('\n');
+                
+                table.innerHTML = ''; // Clear table
+                const thead = table.createTHead();
+                const tbody = table.createTBody();
+
+                // Headers
+                const headerRow = thead.insertRow();
+                headerRow.insertCell().textContent = ''; // Empty top-left
+                rows[0].split(',').forEach(header => {
+                    headerRow.insertCell().textContent = header.trim();
+                });
+
+                // Data rows
+                for (let i = 1; i < rows.length; i++) {
+                    const rowData = rows[i].split(',');
+                    const row = tbody.insertRow();
+                    row.insertCell().textContent = i; // Row number
+                    rowData.forEach((cellData, j) => {
+                        const cell = row.insertCell();
+                        cell.contentEditable = true;
+                        cell.dataset.row = i - 1; // Adjust for 0-indexed data
+                        cell.dataset.col = j;
+                        cell.textContent = cellData.trim();
+                        cell.addEventListener('input', updateCellValue);
+                        cell.addEventListener('blur', evaluateCell);
+                    });
+                }
+                // Re-wire the export button as initSpreadsheet will create a new one
+                const exportCsvBtn = windowEl.querySelector('#export-csv-btn');
+                exportCsvBtn.onclick = () => { // Direct assignment to avoid multiple listeners
+                    let csvContentToExport = "";
+                    for (let i = 0; i < table.rows.length; i++) {
+                        let rowData = [];
+                        for (let j = 0; j < table.rows[i].cells.length; j++) {
+                            // Use textContent directly, as evaluateCell sets it
+                            rowData.push(table.rows[i].cells[j].textContent.trim());
+                        }
+                        csvContentToExport += rowData.join(',') + "\n";
+                    }
+                    downloadBlob(csvContentToExport, 'spreadsheet.csv', 'text/csv');
+                };
+
+                // After populating, make sure any formulas are evaluated
+                setTimeout(recalculateAllCells, 100); // Small delay to ensure content is rendered
+            }
+
+
+            renderDirectory(currentDirectory);
+        }
+        
+        // --- Task Manager (Manajer Tugas) Logic ---
+        function initTaskManager(windowEl) {
+            const taskList = windowEl.querySelector('#task-list');
+            
+            // Function to update the list of running apps
+            function updateTaskManagerList() {
+                taskList.innerHTML = ''; // Clear existing list
+                openWindows.forEach((windowInfo, appId) => {
+                    const listItem = document.createElement('li');
+                    const appTitle = windowInfo.element.querySelector('.window-title').textContent;
+                    listItem.innerHTML = `
+                        <span>${appTitle} (${appId})</span>
+                        <button data-app-id="${appId}">Akhiri Tugas</button>
+                    `;
+                    listItem.querySelector('button').addEventListener('click', (e) => {
+                        const targetAppId = e.target.dataset.appId;
+                        const windowToClose = openWindows.get(targetAppId).element;
+                        closeWindow(windowToClose, targetAppId);
+                    });
+                    taskList.appendChild(listItem);
+                });
+                if (openWindows.size === 0) {
+                    taskList.innerHTML = '<li>Tidak ada aplikasi yang sedang berjalan.</li>';
+                }
+            }
+
+            // Initial update when Task Manager opens
+            updateTaskManagerList();
+
+            // Set up a mutation observer to update task manager when windows are opened/closed
+            // This is a more robust way than just calling it on create/close
+            const observer = new MutationObserver(updateTaskManagerList);
+            observer.observe(taskbarAppsContainer, { childList: true }); // Observe changes in taskbar apps
+
+            // Clean up observer when Task Manager window is closed
+            windowEl.addEventListener('removed', () => { // Custom event, need to dispatch this on close
+                observer.disconnect();
+            });
+        }
+        // Patch closeWindow to dispatch 'removed' event for Task Manager observer
+        const originalCloseWindow = closeWindow;
+        closeWindow = (windowEl, appId) => {
+            originalCloseWindow(windowEl, appId);
+            // Dispatch a custom event when the element is removed from the DOM
+            const removedEvent = new CustomEvent('removed');
+            windowEl.dispatchEvent(removedEvent);
+        };
+
+        // Helper function for downloading blobs (used by Word Editor and Spreadsheet)
+        function downloadBlob(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // --- Fullscreen Functionality ---
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(e => {
+                    console.error(`Error attempting to enable fullscreen: ${e.message} (${e.name})`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // --- Dark Mode Toggle Functionality ---
+        darkModeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            // Store preference in localStorage
+            if (document.body.classList.contains('light-mode')) {
+                localStorage.setItem('kynay-os-theme', 'light');
+            } else {
+                localStorage.setItem('kynay-os-theme', 'dark');
+            }
+        });
+
+        // Apply saved theme on load
+        const savedTheme = localStorage.getItem('kynay-os-theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-mode');
+        }
+
+        // --- Shutdown Simulation ---
+        shutdownBtn.addEventListener('click', () => {
+            if (confirm('Anda yakin ingin mematikan Kynay OS?')) {
+                const shutdownScreen = document.createElement('div');
+                shutdownScreen.style.cssText = `
+                    position: fixed;
+                    top: 0; left: 0; width: 100%; height: 100%;
+                    background-color: #111;
+                    z-index: 10001;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    color: white;
+                    font-size: 2em;
+                    opacity: 0;
+                    transition: opacity 1.5s ease-in-out;
+                `;
+                shutdownScreen.innerHTML = `
+                    <div class="boot-logo">Kynay</div>
+                    <p>Mematikan<span class="loading-dots"></span></p>
+                `;
+                document.body.appendChild(shutdownScreen);
+
+                setTimeout(() => {
+                    shutdownScreen.style.opacity = '1';
+                }, 100); // Small delay to allow element to be added before transition
+
+                setTimeout(() => {
+                    alert('Kynay OS telah dimatikan. Anda bisa menutup jendela browser ini.');
+                    // Attempt to close the window, though often blocked by browser security
+                    window.close();
+                    // Fallback message if window.close() is blocked
+                    if (document.body.contains(shutdownScreen)) {
+                        shutdownScreen.innerHTML = `<div class="boot-logo">Kynay</div><p>Sistem dimatikan. Anda bisa menutup tab ini.</p>`;
+                        shutdownScreen.style.backgroundColor = '#000'; // Make it truly black
+                    }
+                }, 3000); // Show "Mematikan..." for 3 seconds
+            }
+        });
+
+        // --- Simulate Save Layout/Screenshot ---
+        saveLayoutBtn.addEventListener('click', () => {
+            alert('Simulasi: Layout desktop Anda telah disimpan!');
+            // In a real scenario, you'd capture canvas, or save window positions to localStorage.
+            // Full screenshot capture is generally not possible directly in browser JS for security.
+        });
+
+    });
+    </script>
+</body>
+</html>
